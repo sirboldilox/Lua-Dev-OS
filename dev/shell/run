@@ -1,0 +1,28 @@
+boot = true
+reboot = false
+
+sleep(0.6)
+
+term.clear()
+term.setCursorPos(1,1)
+print("Starting Main Shell")
+sleep(0.2)
+print("Awaiting Event")
+
+while boot do
+  event,p1,p2,p3,p4 = os.pullEvent()
+ 
+  -- Event Handling  
+  if event ~= "key" and fs.exists("/dev/shell/"..event..".h") then
+    print("Valid Event: "..event.."")
+    print("Exicuting "..event..".h ")
+    shell.run(""..event..".h") 
+    print("Returning to Shell") 
+  end
+end
+
+if reboot then
+ os.reboot()
+else
+ os.shutdown()
+end

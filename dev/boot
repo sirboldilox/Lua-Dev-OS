@@ -1,0 +1,104 @@
+term.clear()
+term.setCursorPos(1,1)
+
+local function printC(text,colour)
+ if term.isColour() then
+  term.setTextColour(colour)
+ end
+ print(text)
+end
+
+printC("dev OS initialising",1)
+sleep(0.4)
+
+printC("Installing additional API's",8)
+local tlist= {}
+local file = fs.open("/dev/apis/apis.conf","r")
+local n = 1
+while true do
+ tlist[n] = file.readLine()
+ if tlist[n] == "end" then
+  table.remove(tlist,n)
+  break
+ else
+  n = n+1
+ end
+end
+file.close()
+
+for n=4,#tlist do
+ os.loadAPI("/dev/apis/"..tlist[n].."")
+ printC("-> "..tlist[n].." API loaded",32)
+end
+sleep(0.3)
+
+printC("Setting up Global Variables",8)
+local file = fs.open("/dev/var/var.conf","r")
+local n = 1
+while true do
+ tlist[n] = file.readLine()
+ if tlist[n] == "end" then
+  table.remove(tlist,n)
+  break
+ else
+  n = n+1
+ end
+end
+file.close()
+
+-- Global Data table
+
+sys = {}
+sys["netwk"] = {}
+
+for n=4,#tlist do
+  shell.run("/dev/var/"..tlist[n].."")
+  printC("-> "..tlist[n].." variables loaded",32)
+end
+sleep(0.1)
+
+-- Open Rednet Modem
+printC("Opening Rednet",8)
+local open = false
+for _,v in pairs(rs.getSides()) do
+  
+  if peripheral.getType(v) == "modem" then
+     sys["netwk"]["modem"]=v
+     open = true
+  end
+end
+
+if open then printC("-> Rednet Modem Activated",32) else printC("-> No Rednet Modem Connected",16384)
+end
+sleep(0.1)
+
+-- Start Services
+printC("Starting Services",8)
+local tlist= {}
+local file = fs.open("/dev/srv/srv.conf","r")
+local n = 1
+while true do
+ tlist[n] = file.readLine()
+ if tlist[n] == "end" then
+  table.remove(tlist,n)
+  break
+ else
+  n = n+1
+ end
+end
+file.close()
+
+for n=4,#tlist do
+ shell.run("/dev/srv/"..tlist[n].."")
+ printC("-> "..tlist[n].." Started ",32)
+end
+sleep(0.3)
+
+-- Done
+printC("Done",4)
+if term.isColour() then
+term.setTextColour(8)
+end
+sleep(0.2)
+
+shell.run("/dev/shell/run")
