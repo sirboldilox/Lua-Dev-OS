@@ -1,0 +1,9 @@
+-- Keycard lock Variables
+
+sys["netwk"]["KCL"] = {
+["channelsend"] = 1, 
+["channelrec"] = 1, 
+["server"] = 1,
+["rsSide"] = "top",
+["filename"] = "cardx"
+}

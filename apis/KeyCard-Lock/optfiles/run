@@ -1,0 +1,32 @@
+-- Keycardlock service
+
+-- Get server from the sys tables
+
+local modem = sys["netwk"]["modem"]
+local server = sys["netwk"]["KCL"]["server"]
+local csend = sys["netwk"]["KCL"]["channelsend"]
+local crec = sys["netwk"]["KCL"]["channelrec"]
+local filename = sys["netwk"]["KCL"]["filename"]
+local rsSide = sys["netwk"]["KCL"]["rsSide"]
+local side = p1
+
+-- Authenticate file
+
+if fs.exists("/disk/"..filename) then
+	local fp = fs.open("/disk/"..filename,"r")
+	local code = fp.readLine()
+	print(code," ",server," ",crec," ",csend)
+  if netwk.authKeyCard(modem,server,csend,crec,code) then
+		rs.setOutput(rsSide,"true")
+		sleep(5)
+		rs.setOutput(rsSide,"false")
+	end
+	disk.eject(side)
+else
+	disk.eject(side)
+end
+
+
+
+
+

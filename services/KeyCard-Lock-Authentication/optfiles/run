@@ -1,0 +1,60 @@
+-- Authentication service
+
+-- Get some data from the event
+
+local modem = peripheral.wrap(sys["netwk"]["modem"])
+local datdir = "/dev/opt/Auth/dat/"
+
+local schannel = p2 
+local rchannel = p3
+local messaage = p4
+
+local types = {}
+-- Check the channel type
+
+do
+local fp = fs.open(datdir.."channeltypes","r")
+local line = fp.readLine()
+fp.close()
+data = txtutils.deserialise(line)
+end
+
+--if fs.exists(datdir..types[schannel]) then
+  --print("Loading database: "..types[schannel])
+  
+  -- Load the relevant Database
+  
+  -- Possible Future sofistication
+  
+  --local fp = fs.open(datdir..types[schannel],"r")
+  --local line = fp.readLine()
+  --fp.close()
+  --local data = textutils.serialise(line)
+  
+  -- Authenticate
+  
+   
+
+--else
+ -- print("Database "..types[schannel].." does not exist")
+--end  
+
+-- Load the relavent database
+
+
+
+
+-- Check Authentication
+
+local checkout = "false"
+
+if message == data[schannel] then
+  checkout = "true
+end
+
+-- Send Reply
+
+modem.transmit(rchannel,schannel,checkout)
+
+
+

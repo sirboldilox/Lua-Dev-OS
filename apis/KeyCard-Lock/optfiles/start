@@ -1,0 +1,16 @@
+-- Start Keycardlock service
+
+-- Get some variables from the sys tables
+
+local modem = peripheral.wrap(sys["netwk"]["modem"])
+local channelsend = sys["netwk"]["KCL"]["channelsend"]
+local channelrec = sys["netwk"]["KCL"]["channelrec"]
+
+-- open those channels
+
+modem.open(channelsend)
+modem.open(channelrec)
+
+
+
+

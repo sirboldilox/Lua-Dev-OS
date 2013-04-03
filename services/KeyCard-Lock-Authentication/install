@@ -1,0 +1,69 @@
+-- Install Client side keycard lock
+
+local function aConfig(file,line)
+  if not fs.exists(file) then return false end
+  local fp = fs.open(file,"r")
+  n = 1
+  local tfile = {}
+  while true do
+    tfile[n] = fp.readLine()
+    if tfile[n] == nil then break end
+    n = n + 1
+  end
+  fp.close()
+  table.remove(tfile,n)
+  local test = false
+  
+  for i,v in ipairs(tfile) do
+    if v == line then test=true break end
+  end  
+  
+  if not test then table.insert(tfile,n-1,line) end
+  
+  local fp = fs.open(file,"w")
+  for i,v in ipairs(tfile) do
+    fp.writeLine(v)
+  end
+  fp.close() 
+  return true
+end
+
+local function overwrite(from,to)
+  if fs.exists(to) then
+    fs.delete(to)
+  end
+  fs.copy(from,to)
+end
+
+
+-- copy files
+
+local dir = "/disk/install/server/Authentication/"
+
+-- VAR
+--overwrite(dir.."varfile","/dev/var/KCL")
+--print("Copying additional Var files")
+--if not aConfig("/dev/var/var.conf","KCL") then 
+ -- print("Error in ammending var.conf") end
+-- API
+--overwrite(dir.."netwk-api","dev/apis/netwk")
+--print("Copying additional API's")
+--if not aConfig("/dev/apis/apis.conf","netwk") then
+ -- print("Error in ammending apis.conf") end
+-- SRV
+overwrite(dir.."srvfile","/dev/srv/Auth")
+print("Installing additional Services")
+if not aConfig("/dev/srv/srv.conf","Auth") then
+  print("Error in ammending srv.conf") end
+
+if not fs.exists("/dev/opt") then fs.makeDir("/opt") end
+if fs.exists("/dev/opt/Auth") then fs.delete("/dev/opt/Auth") end
+print("Copying opt files ")
+fs.copy(dir.."optfiles","/dev/opt/Auth")
+-- Modem Event Handler
+overwrite(dir.."modem_message.h","/dev/shell/modem_message.h")
+print("Copying Modem Event Handler")
+end
+end  
+  
+

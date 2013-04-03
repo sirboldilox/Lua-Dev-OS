@@ -1,0 +1,102 @@
+-- Install Client side keycard lock
+
+local function aConfig(file,line)
+  if not fs.exists(file) then return false end
+  local fp = fs.open(file,"r")
+  n = 1
+  local tfile = {}
+  while true do
+    tfile[n] = fp.readLine()
+    if tfile[n] == nil then break end
+    n = n + 1
+  end
+  fp.close()
+  table.remove(tfile,n)
+  local test = false
+  
+  for i,v in ipairs(tfile) do
+    if v == line then test=true break end
+  end  
+  
+  if not test then table.insert(tfile,n-1,line) end
+  
+  local fp = fs.open(file,"w")
+  for i,v in ipairs(tfile) do
+    fp.writeLine(v)
+  end
+  fp.close() 
+  return true
+end
+
+local function overwrite(from,to)
+  if fs.exists(to) then
+    fs.delete(to)
+  end
+  fs.copy(from,to)
+end
+
+
+-- copy files
+
+local dir = "/disk/install/client/KeyCard-Lock/"
+
+-- VAR
+overwrite(dir.."varfile","/dev/var/KCL")
+print("Copying additional Var files")
+if not aConfig("/dev/var/var.conf","KCL") then 
+  print("Error in ammending var.conf") end
+-- API
+overwrite(dir.."netwk-api","dev/apis/netwk")
+print("Copying additional API's")
+if not aConfig("/dev/apis/apis.conf","netwk") then
+  print("Error in ammending apis.conf") end
+-- SRV
+overwrite(dir.."srvfile","/dev/srv/KCL")
+print("Installing additional Services")
+if not aConfig("/dev/srv/srv.conf","KCL") then
+  print("Error in ammending srv.conf") end
+
+if not fs.exists("/dev/opt") then fs.makeDir("/opt") end
+if fs.exists("/dev/opt/KCL") then fs.delete("/dev/opt/KCL") end
+print("Copying opt files ")
+fs.copy(dir.."optfiles","/dev/opt/KCL")
+-- Disk Event Handler
+overwrite(dir.."disk.h","/dev/shell/disk.h")
+print("Copying Disk Event Handler")
+--Detect Disk Drive
+do 
+   local count = 0
+   local disks = {}
+  for i,v in ipairs(rs.getSides()) do
+    if peripheral.getType(v) == "drive" then
+    count = count + 1
+    disks[count] = v
+    end
+  end
+
+  if count == 0 then
+    print("Please Attach a disk drive and press enter")
+    local diskpres = false
+    while true do
+      local event,p1,p2,p3 = os.pullEvent()
+      if event == "peripheral" and peripheral.getType(p1) == "drive" then
+        print("Drive Attached at"..p1)
+        diskpres = true
+      elseif event == "key" and p1 == keys.enter then
+        if not diskpres then print("Please Attach a disk drive and press enter")   
+        else break end
+      end
+    end
+  elseif count == 1 then
+    print("Disk Drive Found at "..disks[1])
+    -- Ammend the Var file
+  elseif count >1 then
+    print("Multiple Drives found You are retarded..")
+    print("Drive "..disks[1].." Chosen, ammend the var file if this is wrong") 
+    -- Ammend the Var FIle
+  end     
+  
+end
+  
+  
+
