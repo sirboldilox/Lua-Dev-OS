@@ -1,0 +1,5 @@
+-- Start Administrative services
+
+local modem = peripheral.wrap(sys["netwk"]["modem"])
+modem.open(sys["netwk"]["admin"]
+

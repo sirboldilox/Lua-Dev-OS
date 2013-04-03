@@ -1,0 +1,33 @@
+-- Relay service
+
+local tab = netwksat.decode(p4)
+local datatab = "/dev/opt/relay/dat"
+
+-- Check the message is correctly formated and
+-- this relay station is the target
+
+if tab[1] and tab[4] == os.getComputerID() then
+  
+  local toID = tab[2]
+  
+  local relaychan = sys["netwk"]["relay"]  
+  local modem = peripheral.wrap(sys["netwk"]["modem"])  
+  -- Check the ID tables
+  
+  if fs.exists(datatab) then
+    local data = dblite.loadTable(datatab)
+    
+    if data[toID] ~= nil then 
+      if data[toID] == "send" then
+        print("Sending to "..toID) 
+        modem.open(p3)
+        modem.transmit(p3,1,p4)   
+        modem.close(p3)
+      else  
+        print("Relaying to "..data[toID] )
+        local message = encode(toID,tab[3],data[toID],tab[5])
+        modem.transmit(relaychan,p3,message)
+     end
+    end
+  end
+end

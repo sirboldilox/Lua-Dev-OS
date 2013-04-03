@@ -1,0 +1,71 @@
+-- Admin services
+
+local admin = true
+local adminchannel = math.random(250,500)
+local modem = peripheral.wrap(sys["netwk"]["modem"])
+
+local options = {}
+
+do 
+  local fp = fs.open("/dev/opt/admin/dat")
+  options = textutils.unserialise(fp.readLine())
+  fp.close()
+end
+
+modem.open(adminchannel)
+modem.transmit(sys["netwk"]["admin"],adminchannel,"locked")
+sleep(0.2)
+modem.transmit(adminchannel,adminchannel,textutils.serialise(options))
+
+-- Emulate a shell
+
+while admin do
+  local event,p1,p2,p3,p4 = os.pullEvent()
+  local adminflag = 0
+  local servicetop = true
+  if event == "modem_message" then
+    if p2 == sys["netwk"]["relay"] then
+      shell.run("/dev/opt/relay/run")
+    elseif p2 == adminchannel then
+	   -- Admin Services
+       if adminflag == 0 then adminflag = tonumber(p3) end
+			if adminflag = 1 then
+				-- Open channel file admending
+				-- If first time send file
+				if servicetop then
+					local fp = fs.open("/dev/opt/relay/openchan","r")
+					local file = {}
+					local i = 1
+					while true do
+						file[i] = fp.readLine()
+						if file[i] == nil then break
+						else i = i + 1 end
+					end
+					fp.close()
+					table.remove(file,i)
+					modem.transmit(adminchannel,adminchannel,textutils.serialise(file))
+				-- Expect a command back
+				else
+					if p3 == "done" then
+						servicetop = false     -- Reset flags
+						adminflag = 0
+					elseif string.sub(p3,1,4) == "edit" then
+						local tab = {}
+						local tab = texutils.unserialise(string.sub(p3,5,#p3))
+						local fp = fs.open("/dev/opt/relay/openchan","r")
+						for i=1,#tab do
+							fp.writeLine(tab[i])
+						end
+						fp.close()
+					end
+				end
+			elseif adminflag = 2 then
+				-- Database file Services
+				
+			elseif adminflag = 3 then
+				-- Exit admin Services
+				admin = false
+			end
+    end
+  else end
+end

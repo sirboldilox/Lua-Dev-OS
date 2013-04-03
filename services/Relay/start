@@ -1,0 +1,27 @@
+-- Start relay service
+
+-- Get some variables from the sys tables
+
+local modem = peripheral.wrap(sys["netwk"]["modem"])
+local channels = {}
+local n = 1
+local fp = fs.open("/dev/opt/relay/openchan","r")
+
+-- Read in channels from file
+while true do
+  channels[n] = fp.readLine() 
+  if channels[n] == nil then 
+    table.remove(channels,n)
+    break
+  else
+  n = n+1
+  end
+end 
+
+fp.close()
+-- Open those channels
+for i,v in ipairs(channels) do
+  print("Opening Channel: "..v)
+  modem.open(tonumber(v))
+end
+
