@@ -12,6 +12,9 @@ Features:
 To do:
 - Add basic bios to bootloader for local config file editing
 - Intergrate rednet modem messaging system into the shell
-
 - Write a better database API
+
+- FTP system
+- Railway relay,system
+- Elevator
 
