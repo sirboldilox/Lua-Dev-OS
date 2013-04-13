@@ -89,7 +89,7 @@ sleep(0.1)
 -- Start Services
 printC("Starting Services",8)
 local tlist= {}
-local file = fs.open("/dev/srv/srv.conf","r")
+local file = fs.open("/dev/srv.conf","r")
 local n = 1
 while true do
  tlist[n] = file.readLine()
