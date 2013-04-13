@@ -1,0 +1,144 @@
+-- Interactive BIOS for config file editing at boot.
+-- version 0.1
+
+-- Reset text colour
+local colour = term.isColour()
+
+if colour then
+  term.setTextColour(1)
+end
+
+-- GUI functions
+
+local function clearAll()
+  if colour then
+    term.setBackgroundColour(256)
+  end
+    term.clear()
+    term.setCursorPos(1,1)
+end
+
+local function printC(text,colour)
+ if colour then
+  term.setTextColour(colour)
+ end
+ print(text)
+end
+
+local function line(yCoord,char,bcolour)
+	term.setCursorPos(1,yCoord)
+	if colour then 
+		char = " "
+		term.setBackgroundColour(bcolour)
+	end
+	x,y = term.getSize()
+	for i=1,x do
+		term.write(char)
+	end
+end
+
+-- Menu Rendering
+
+function drawBase(hoption)
+  clearAll()
+  local xs,ys = term.getSize()
+  local options = {"APIS","Variables","Services"}
+  local pos = {2,9,21}
+  
+  line(1,"#",2048)
+  line(2,"#",2048)
+  line(ys,"#",2048)
+  term.setCursorPos(18,1)
+  term.write(" BOOT SETUP ")
+
+  for i=1,3 do
+    term.setCursorPos(pos[i],2)
+    if i==hoption then 
+      if colour then
+        term.setBackgroundColour(256)
+      end
+      term.write(options[i])
+      term.setCursorPos(3,4)
+      term.write(options[i].." Config      ")
+      if colour then
+        term.setBackgroundColour(2048)
+      end
+    else 
+      term.write(options[i])
+    end
+  end 
+  if colour then
+	   for i=6,12 do
+	     term.setCursorPos(3,i)
+	     for j=1,20 do
+	       term.write(" ") 
+	     end
+    end
+  end
+  term.setCursorPos(1,ys)
+  term.write("F1 = EXIT")
+end
+
+local function drawEntry(opt,tdata)
+  term.setCursorPos(3,6)
+  term.setBackgroundColour(2048)
+  if #tdata == 0 then
+    term.write("No Entries")
+  else
+    for i=1,#tdata[opt] do
+      term.setCursorPos(3,5+i)
+      term.write(tdata[opt][i])
+    end
+  end  
+end
+
+local function redraw(opt,tdata)
+  drawBase(opt)
+  drawEntry(opt,tdata)
+end
+
+-- Load up data from config file and remove
+-- commenting and end keyword
+
+local function loadConfig(filedir)
+  local fp = fs.open(filedir,"r")
+  local tab = {}
+  local n = 1
+  while true do
+    local a = fp.readLine()
+    if a ~= nil then
+      if string.sub(a,1,2) ~= "--" and a ~= "end" then
+      tab[n] = a
+      n = n+1
+      end
+    else break
+    end
+  end
+  return tab
+end
+
+-- Load config files
+
+local pos = 1
+data = {{},{},{}}
+
+data[1] = loadConfig("/dev/apis/apis.conf")
+data[2] = loadConfig("/dev/var/var.conf")
+data[3] = loadConfig("/dev/srv.conf")
+
+redraw(pos,data)
+
+while true do
+  local event,p1,p2 = os.pullEvent()
+  if event == "key" then
+    if p1 == 205 and pos < 3 then
+      pos = pos + 1
+      redraw(pos,data)
+    elseif p1 == 203 and pos > 1 then
+      pos = pos - 1
+      redraw(pos,data)
+    elseif p1 == 59 then
+      break
+    end
+  end  
+end

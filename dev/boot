@@ -9,7 +9,21 @@ local function printC(text,colour)
 end
 
 printC("dev OS initialising",1)
-sleep(0.4)
+printC("Press CTRL to enter config setup..",16)
+os.startTimer(1.4)
+while true do
+	local event,p1,p2 = os.pullEvent()
+	if event == "timer" then break
+	elseif p1 == 29 then
+		-- BIOS
+		shell.run("/dev/bios")
+		term.setBackgroundColour(32768)
+  term.clear()
+  term.setCursorPos(1,1)
+  printC("Bios Exited",1)
+  break
+	end	
+end
 
 printC("Installing additional API's",8)
 local tlist= {}

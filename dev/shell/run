@@ -11,18 +11,18 @@ print("Awaiting Event")
 
 while boot do
   event,p1,p2,p3,p4 = os.pullEvent()
- 
-  -- Event Handling  
+
+  -- Event Handling
   if event ~= "key" and fs.exists("/dev/shell/"..event..".h") then
     print("Valid Event: "..event.."")
     print("Exicuting "..event..".h ")
-    shell.run(""..event..".h") 
-    print("Returning to Shell") 
+    shell.run(""..event..".h")
+    print("Returning to Shell")
   end
 end
 
 if reboot then
- os.reboot()
+  os.reboot()
 else
- os.shutdown()
+  os.shutdown()
 end
