@@ -39,6 +39,10 @@ end
 
 -- Menu Rendering
 
+local menu = false
+local menupos = 1
+local editmode = false
+
 function drawBase(hoption)
   clearAll()
   local xs,ys = term.getSize()
@@ -46,8 +50,8 @@ function drawBase(hoption)
   local pos = {2,9,21}
   
   line(1,"#",2048)
-  line(2,"#",2048)
-  line(ys,"#",2048)
+  line(2," ",2048)
+  line(ys," ",2048)
   term.setCursorPos(18,1)
   term.write(" BOOT SETUP ")
 
@@ -56,45 +60,95 @@ function drawBase(hoption)
     if i==hoption then 
       if colour then
         term.setBackgroundColour(256)
-      end
-      term.write(options[i])
+        term.write(" "..options[i].." ")
+      else
+	    term.write("-"..options[i].."-")
+	  end
       term.setCursorPos(3,4)
       term.write(options[i].." Config      ")
       if colour then
         term.setBackgroundColour(2048)
       end
     else 
-      term.write(options[i])
+      term.write(" "..options[i].." ")
     end
   end 
   if colour then
 	   for i=6,12 do
-	     term.setCursorPos(3,i)
+	     term.setCursorPos(2,i)
 	     for j=1,20 do
 	       term.write(" ") 
 	     end
     end
   end
-  term.setCursorPos(1,ys)
-  term.write("F1 = EXIT")
 end
 
-local function drawEntry(opt,tdata)
+local function drawInfo(string,opt)
+	term.setCursorPos(22,6)
+	dir = {"apis/","var/","opt/"}
+	if fs.exists("/dev/"..dir[opt]..string) then
+		term.write("File Exists")
+	else
+		term.write("File Does not Exist!")
+	end
+end
+
+local function drawEntry(opt,entryopt,tdata)
   term.setCursorPos(3,6)
-  term.setBackgroundColour(2048)
+  if colour then
+    term.setBackgroundColour(2048)
+  end
   if #tdata == 0 then
     term.write("No Entries")
   else
     for i=1,#tdata[opt] do
-      term.setCursorPos(3,5+i)
-      term.write(tdata[opt][i])
+      term.setCursorPos(2,5+i)
+	  if i == entryopt then
+	    if colour then
+	      term.setTextColour(32)
+		  term.write(">")
+		  term.setTextColour(1)
+		  term.write(tdata[opt][i])
+		  term.setTextColour(32)
+		  term.write("<")
+		  term.setTextColour(1)
+		  drawInfo("help",1)
+		else
+	      term.write(">"..tdata[opt][i].."<")
+		end
+	  else
+        term.write(" "..tdata[opt][i].." ")
+	  end
     end
   end  
 end
 
-local function redraw(opt,tdata)
+local function drawMenu()
+  local xs,ys = term.getSize()
+  local options = {"Edit","Save","Exit"}
+  term.setCursorPos(1,ys)
+  if not menu then
+    term.write("Press CTRL for Menu")
+  else
+    for i=1,3 do
+	  if i == menupos then
+	    term.write("["..options[i].."]")
+	  else
+        term.write(" "..options[i].." ")
+	  end
+    end
+  end
+  term.setCursorPos(20,ys)
+  local tedit = "OFF"
+  if editmode then tedit = "ON " end
+  term.setCursorPos(xs - 9,ys)
+  term.write("Edit: "..tedit)
+end
+
+local function redraw(opt,entryopt,tdata)
   drawBase(opt)
-  drawEntry(opt,tdata)
+  drawEntry(opt,entryopt,tdata)
+  drawMenu()
 end
 
 -- Load up data from config file and remove
@@ -117,28 +171,77 @@ local function loadConfig(filedir)
   return tab
 end
 
+-- Save functions
+
+local function save()
+  local xs,ys = term.getSize()
+  local s = "Save Mode feature still WIP"
+  term.setCursorPos((xs/2)-(#s/2),ys/2)
+  term.write(s)
+  sleep(1.5)
+end
+
 -- Load config files
 
 local pos = 1
+local entrypos = 0
 data = {{},{},{}}
 
 data[1] = loadConfig("/dev/apis/apis.conf")
 data[2] = loadConfig("/dev/var/var.conf")
 data[3] = loadConfig("/dev/srv.conf")
 
-redraw(pos,data)
+redraw(pos,entrypos,data)
 
 while true do
   local event,p1,p2 = os.pullEvent()
   if event == "key" then
-    if p1 == 205 and pos < 3 then
-      pos = pos + 1
-      redraw(pos,data)
-    elseif p1 == 203 and pos > 1 then
-      pos = pos - 1
-      redraw(pos,data)
-    elseif p1 == 59 then
-      break
+    if p1 == 29 then 								-- Activate Menu
+	  menu = not menu
+	  redraw(pos,entrypos,data)
+    end
+    if not menu then								-- Switch between config files
+	  if entrypos == 0 then							-- Horizontal switching
+	    if p1 == 205 and pos < 3 then
+          pos = pos + 1
+          redraw(pos,entrypos,data)
+        elseif p1 == 203 and pos > 1 then
+          pos = pos - 1
+          redraw(pos,entrypos,data)
+		elseif p1 == 208 then			-- Move from headders to entries						
+			entrypos = 1
+			redraw(pos,entrypos,data)
+		end
+      else											-- Vertical movement through entry
+		if p1 == 200 then 
+			entrypos = entrypos - 1
+			redraw(pos,entrypos,data)
+		elseif p1 == 208 and entrypos < #data[pos] then
+			entrypos = entrypos + 1
+			redraw(pos,entrypos,data)
+		end
+   	  end
+	else											-- Switch between menu entries
+	  if p1 == 205 and menupos < 3 then
+        menupos = menupos + 1
+        redraw(pos,entrypos,data)
+      elseif p1 == 203 and menupos > 1 then
+        menupos = menupos - 1
+        redraw(pos,entrypos,data)
+      elseif p1 == 28 then							-- Enter key resolve for menu
+	    if menupos == 1 then
+		  editmode = not editmode
+		  entrypos = 0
+		  menu = false
+		  redraw(pos,entrypos,data)
+		elseif  menupos == 2 then
+		  save()
+		  menu = false
+		  redraw(pos,entrypos,data)
+		else 
+		  break
+		end
+  	  end
     end
   end  
 end

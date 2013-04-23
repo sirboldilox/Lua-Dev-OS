@@ -1,118 +1,169 @@
+-- # System startup #
+
 term.clear()
 term.setCursorPos(1,1)
 
 local function printC(text,colour)
- if term.isColour() then
-  term.setTextColour(colour)
- end
- print(text)
+  if term.isColour() then
+    term.setTextColour(colour)
+  end
+  print(text)
 end
+
+local function genBlankConfig(filename,dir,title)
+  local fp = fs.open(dir..filename,"w")
+  fp.writeLine("-- "..title)
+  fp.writeLine("end")
+  fp.close()
+end
+
+-- # File Checking #
 
 printC("dev OS initialising",1)
-printC("Press CTRL to enter config setup..",16)
-os.startTimer(1.4)
-while true do
-	local event,p1,p2 = os.pullEvent()
-	if event == "timer" then break
-	elseif p1 == 29 then
-		-- BIOS
-		shell.run("/dev/bios")
-		term.setBackgroundColour(32768)
-  term.clear()
-  term.setCursorPos(1,1)
-  printC("Bios Exited",1)
-  break
-	end	
+local configname = {"apis","var","srv"}
+local configdir = {"/apis/","/var/","/"}
+for n=1,3 do
+  if not fs.exists("/dev"..configdir[n]..configname[n]..".conf") then
+    printC(configname[n].." configeration file does not exists",16384)
+	genBlankConfig(configname[n]..".conf","/dev"..configdir[n],configname[n].." configeration file")
+	printC("Generated blank config file",32)
+  end
 end
 
+-- # Enter BIOS Option #
+
+if fs.exists("/dev/bios") then
+  printC("Press CTRL to enter config setup..",16)
+  os.startTimer(1.4)
+  while true do
+    local event,p1,p2 = os.pullEvent()
+    if event == "timer" then break
+    elseif p1 == 29 then
+      -- BIOS
+      shell.run("/dev/bios")
+      term.setBackgroundColour(32768)
+      term.clear()
+      term.setCursorPos(1,1)
+      printC("Bios Exited",1)
+      break
+    end	
+  end
+end
+
+-- # Loading API's #
+
 printC("Installing additional API's",8)
-local tlist= {}
+local tlist = {}
 local file = fs.open("/dev/apis/apis.conf","r")
 local n = 1
 while true do
- tlist[n] = file.readLine()
- if tlist[n] == "end" then
-  table.remove(tlist,n)
-  break
- else
-  n = n+1
- end
+  local line = file.readLine()
+  if line == "end" then break
+  elseif string.sub(line,1,2) ~= "--" then
+    tlist[n] = line
+    n = n+1
+  end
 end
 file.close()
 
-for n=4,#tlist do
- os.loadAPI("/dev/apis/"..tlist[n].."")
- printC("-> "..tlist[n].." API loaded",32)
+for n=1,#tlist do
+  if fs.exists("/dev/apis/"..tlist[n]) then
+    os.loadAPI("/dev/apis/"..tlist[n])
+    printC("-> "..tlist[n].." API loaded",32)
+  else
+    printC("-> "..tlist[n].." file not found",16384)
+  end
 end
 sleep(0.3)
 
+-- # Loading Global Variables #
+
 printC("Setting up Global Variables",8)
 local file = fs.open("/dev/var/var.conf","r")
+local tlist = {}
 local n = 1
 while true do
- tlist[n] = file.readLine()
- if tlist[n] == "end" then
-  table.remove(tlist,n)
-  break
- else
-  n = n+1
- end
+  local line = file.readLine()
+  if line == "end" then break
+  elseif string.sub(line,1,2) ~= "--" then
+    tlist[n] = line
+    n = n+1
+  end
 end
 file.close()
 
--- Global Data table
+-- # Global Data table #
 
 sys = {}
 sys["netwk"] = {}
 
-for n=4,#tlist do
-  shell.run("/dev/var/"..tlist[n].."")
-  printC("-> "..tlist[n].." variables loaded",32)
+for n=1,#tlist do
+  if fs.exists("/dev/var/"..tlist[n]) then
+    shell.run("/dev/var/"..tlist[n])
+    printC("-> "..tlist[n].." variables loaded",32)
+  else
+    printC("-> "..tlist[n].." file not found",16384)
+  end
 end
 sleep(0.1)
 
--- Open Rednet Modem
+-- # Open Rednet Modem #
+
 printC("Opening Rednet",8)
 local open = false
 for _,v in pairs(rs.getSides()) do
   
   if peripheral.getType(v) == "modem" then
-     sys["netwk"]["modem"]=v
+     sys["modem"]=v
      open = true
   end
 end
 
-if open then printC("-> Rednet Modem Activated",32) else printC("-> No Rednet Modem Connected",16384)
+if open then 
+  printC("-> Rednet Modem Activated",32) else printC("-> No Rednet Modem Connected",16384)
 end
 sleep(0.1)
 
--- Start Services
+-- # Start Services #
+
 printC("Starting Services",8)
-local tlist= {}
 local file = fs.open("/dev/srv.conf","r")
+local tlist = {}
 local n = 1
 while true do
- tlist[n] = file.readLine()
- if tlist[n] == "end" then
-  table.remove(tlist,n)
-  break
- else
-  n = n+1
- end
+  local line = file.readLine()
+  if line == "end" then break
+  elseif string.sub(line,1,2) ~= "--" then
+    tlist[n] = line
+    n = n+1
+  end
 end
 file.close()
 
-for n=4,#tlist do
- shell.run("/dev/srv/"..tlist[n].."")
- printC("-> "..tlist[n].." Started ",32)
+for n=1,#tlist do
+  if fs.exists("/dev/opt/"..tlist[n]) then
+    if fs.exists("/dev/opt/"..tlist[n].."/start") then
+	  shell.run("/dev/opt/"..tlist[n].."/start")
+      printC("-> "..tlist[n].." Started ",32)
+	else
+	  printC("-> "..tlist[n].." start file not found",16384)
+	end
+  else
+    printC("-> "..tlist[n].." directory not found",16384)
+  end
 end
 sleep(0.3)
 
--- Done
+-- # Done, Execute shell #
+
 printC("Done",4)
 if term.isColour() then
 term.setTextColour(8)
 end
 sleep(0.2)
 
-shell.run("/dev/shell/run")
+if fs.exists("/dev/shell/run") then
+  shell.run("/dev/shell/run")
+else
+  printC("Shell run file not found",16384)
+end

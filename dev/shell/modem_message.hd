@@ -1,0 +1,22 @@
+-- Modem Message Handling
+
+-- Event parameters
+-- event: "modem_message"
+-- p1:    < modem side    >
+-- p2:    < send channel  >
+-- p3:    < reply channel >
+-- p4:    < message       >
+-- p5:    < distance      >
+
+-- Check network channel table
+
+if sys["netwk"][p2] ~= null then
+  if fs.exists("/dev/opt/"..sys["netwk"][p2].."/run") then
+    print("Exicuting "..sys["netwk"][p2].." service")
+    shell.run("/dev/opt/"..sys["netwk"][p2].."/run")
+  else
+    print("Error run file not found for "..sys["chan"][p2].." service")
+  end
+end
+
+

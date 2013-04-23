@@ -13,10 +13,10 @@ while boot do
   event,p1,p2,p3,p4 = os.pullEvent()
 
   -- Event Handling
-  if event ~= "key" and fs.exists("/dev/shell/"..event..".h") then
+  if event ~= "key" and fs.exists("/dev/shell/"..event..".hd") then
     print("Valid Event: "..event.."")
-    print("Exicuting "..event..".h ")
-    shell.run(""..event..".h")
+    print("Exicuting "..event..".hd ")
+    shell.run("/dev/shell/"..event..".hd")
     print("Returning to Shell")
   end
 end

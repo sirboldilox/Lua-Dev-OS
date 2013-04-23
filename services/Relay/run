@@ -1,18 +1,33 @@
 -- Relay service
+-- Decode format
+-- [1] True/false if decode was sucessful (bool)
+-- [2] Target Computer ID                 (int)
+-- [3] Sender Computer ID                 (int)
+-- [4] Relay station ID                   (int)
+-- [5] Message                            (string)
+
+-- Relay data file format
+-- textutils formatted table
+-- table[computerID] = "send" or <int>
+--
+-- Table value = send then message is transmitted
+-- directly to that ID
+--
+-- Table value ~= send then message is relayed to next station
 
 local tab = netwksat.decode(p4)
-local datatab = "/dev/opt/relay/dat"
+local datatab = "/dev/opt/relay/relayid.db"
 
 -- Check the message is correctly formated and
--- this relay station is the target
+-- this relay station is the target relay
 
 if tab[1] and tab[4] == os.getComputerID() then
   
   local toID = tab[2]
-  
   local relaychan = sys["netwk"]["relay"]  
-  local modem = peripheral.wrap(sys["netwk"]["modem"])  
-  -- Check the ID tables
+  local modem = peripheral.wrap(sys["modem"]) 
+  
+  -- Check the ID tables for the next relay station
   
   if fs.exists(datatab) then
     local data = dblite.loadTable(datatab)
